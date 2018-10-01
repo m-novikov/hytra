@@ -11,15 +11,15 @@ class GMMMergerResolver(merger_resolver_plugin.MergerResolverPlugin):
     """
 
     def initGMM(self, mergerCount, object_init_list=None):
-        gmm = mixture.GMM(n_components=mergerCount)
+        gmm = mixture.GaussianMixture(n_components=mergerCount)
         if object_init_list is not None and len(object_init_list) > 0:
             gmm.weights_ = np.array([o[0] for o in object_init_list])
-            gmm.covars_ = np.array([o[1] for o in object_init_list])
+            gmm.covariances_ = np.array([o[1] for o in object_init_list])
             gmm.means_ = np.array([o[2] for o in object_init_list])
         return gmm
 
     def getObjectInitializationList(self, gmm):
-        return zip(gmm.weights_, gmm.covars_, gmm.means_)
+        return zip(gmm.weights_, gmm.covariances_, gmm.means_)
 
     def resolveMergerForCoords(self, coordinates, mergerCount, initializations=None):
         """
@@ -78,6 +78,9 @@ class GMMMergerResolver(merger_resolver_plugin.MergerResolverPlugin):
                 assert(coordinates.shape[1] == len(offset))
                 coordinates = coordinates + offset
             gmm = self.initGMM(len(fits), fits)
+            # HACK: make gmm think it has been fit. Needed since mandatory switch
+            # from mixture.GMM to mixture.GaussianMixture in sklearn 0.19
+            gmm.precisions_cholesky_ = np.zeros(gmm.covariances_.shape)
             responsibilities = gmm.predict(coordinates)
             newIds = np.array(newIds)
             newObjectIds = newIds[responsibilities]
