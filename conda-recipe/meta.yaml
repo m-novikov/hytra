@@ -27,7 +27,7 @@ requirements:
     - dpct
     - yapsy
     - vigra
-    - scikit-learn
+    - scikit-learn {{ scikit_learn }}*
     - scikit-image
     - h5py
 
